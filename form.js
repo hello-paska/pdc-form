@@ -37,8 +37,9 @@
   const labelled = (f, control) =>
     el("div", {}, [el("label", { class: "field-label", for: f.id, text: f.label }), control]);
 
-  // ── state for non-native inputs (chips / multi) ────────────
-  const selections = {}; // id -> Set
+  // ── state for non-native inputs ────────────────────────────
+  const selections = {}; // chips: id -> Set
+  const brandLists = {}; // brand lists: id -> rows container
 
   // ── section renderers ──────────────────────────────────────
   const renderers = {
@@ -156,23 +157,56 @@
       return el("div", {}, [grid, note]);
     },
 
-    mixed(s) {
+    textarea(s) {
+      return fieldControl({ id: s.id, placeholder: s.placeholder, kind: "textarea" });
+    },
+
+    brands(s) {
       return el(
         "div",
         { class: "stack" },
-        s.fields.map((f) => {
-          if (f.kind !== "multi") return labelled(f, fieldControl(f));
-          const chosen = (selections[f.id] = new Set());
-          const list = el("div", { class: "chips", role: "group", "aria-label": f.label });
-          f.options.forEach((o) => {
-            const chip = el("button", { type: "button", class: "chip", "aria-pressed": "false", text: o });
-            chip.addEventListener("click", () => {
-              chosen.has(o) ? chosen.delete(o) : chosen.add(o);
-              chip.setAttribute("aria-pressed", chosen.has(o));
-            });
-            list.append(chip);
+        s.lists.map((list) => {
+          const rows = el("div", { class: "brand-rows" });
+          let count = 0;
+          const addRow = () => {
+            count += 1;
+            const linkId = `${list.id}_${count}_link`;
+            rows.append(
+              el("div", { class: "brand-row" }, [
+                el("input", {
+                  class: "input",
+                  type: "url",
+                  id: linkId,
+                  placeholder: list.linkPlaceholder,
+                  "aria-label": `${list.label}: link ${count}`,
+                  autocomplete: "off",
+                  "data-role": "link",
+                }),
+                el("textarea", {
+                  class: "textarea",
+                  id: `${list.id}_${count}_notes`,
+                  placeholder: list.notesPlaceholder,
+                  "aria-label": `${list.label}: what you like or dislike ${count}`,
+                  "data-role": "notes",
+                }),
+              ])
+            );
+          };
+          addRow();
+          brandLists[list.id] = rows;
+
+          const add = el("button", { type: "button", class: "btn-add", text: `+ ${list.addButton}` });
+          add.addEventListener("click", () => {
+            addRow();
+            rows.lastElementChild.querySelector("input").focus();
           });
-          return el("div", {}, [el("span", { class: "field-label", text: f.label }), list]);
+
+          const wrap = el("div", {}, [el("span", { class: "field-label", text: list.label }), rows, add]);
+          wrap._reset = () => {
+            while (rows.children.length > 1) rows.lastElementChild.remove();
+            count = 1;
+          };
+          return wrap;
         })
       );
     },
@@ -216,6 +250,163 @@
   document.getElementById("footer-copy").textContent = C.footer.copyright;
   document.getElementById("footer-location").textContent = C.footer.location;
 
+  // ── start screen: "Do you already have a brand?" ──────────
+  const S = C.start;
+  const G = S.guidelines;
+  const startEl = document.getElementById("start");
+
+  const choice = (label) => el("button", { type: "button", class: "choice", "aria-pressed": "false", text: label });
+  const press = (on, off) => {
+    on.setAttribute("aria-pressed", "true");
+    off.setAttribute("aria-pressed", "false");
+  };
+
+  const hasYes = choice(S.yes);
+  const hasNo = choice(S.no);
+  const gYes = choice(G.yes);
+  const gNo = choice(G.no);
+
+  const fileInput = el("input", { type: "file", id: "guidelines_file", accept: G.accept, class: "file-input" });
+  const fileName = el("span", { class: "file-name", text: "Click to choose a file, or drop it here" });
+  const dropzone = el("label", { class: "dropzone", for: "guidelines_file" }, [
+    fileInput,
+    el("span", { class: "dropzone-icon", "aria-hidden": "true", text: "↑" }),
+    fileName,
+  ]);
+  const sendBtn = el("button", { type: "button", class: "btn-primary", text: G.sendButton, disabled: "" });
+  const uploadError = el("p", { class: "form-error", role: "alert", hidden: "" });
+
+  const uploadStep = el("div", { class: "step", hidden: "" }, [
+    el("span", { class: "field-label", text: G.uploadLabel }),
+    dropzone,
+    el("p", { class: "upload-hint", text: G.uploadHint }),
+    uploadError,
+    el("div", { class: "actions" }, [sendBtn]),
+  ]);
+
+  const guidelinesStep = el("div", { class: "step", hidden: "" }, [
+    el("h2", { class: "display section-title", html: accent(G.title) }),
+    el("p", { class: "hint", text: G.hint }),
+    el("div", { class: "choices" }, [gYes, gNo]),
+    uploadStep,
+  ]);
+
+  startEl.append(
+    meta("", S.label),
+    el("div", { class: "intro-body" }, [
+      el("h1", { class: "display intro-title start-title", html: accent(S.title) }),
+      el("div", { class: "intro-side" }, [el("p", { text: S.description })]),
+    ]),
+    el("div", { class: "choices" }, [hasYes, hasNo]),
+    guidelinesStep
+  );
+
+  const reveal = (node) => {
+    node.hidden = false;
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  hasYes.addEventListener("click", () => {
+    press(hasYes, hasNo);
+    reveal(guidelinesStep);
+  });
+
+  hasNo.addEventListener("click", () => {
+    press(hasNo, hasYes);
+    startEl.hidden = true;
+    form.hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  document.getElementById("back-btn").addEventListener("click", () => {
+    form.hidden = true;
+    startEl.hidden = false;
+    hasNo.setAttribute("aria-pressed", "false");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  gYes.addEventListener("click", () => {
+    press(gYes, gNo);
+    reveal(uploadStep);
+  });
+
+  gNo.addEventListener("click", async () => {
+    press(gNo, gYes);
+    uploadStep.hidden = true;
+    await submitBrief({ submittedAt: new Date().toISOString(), hasBrand: true, hasGuidelines: false });
+    openThanksModal();
+  });
+
+  const MAX_BYTES = 50 * 1024 * 1024;
+  const pickFile = (file) => {
+    uploadError.hidden = true;
+    if (!file) return;
+    if (file.size > MAX_BYTES) {
+      uploadError.textContent = "That file is over 50 MB. Please upload a smaller file or a ZIP.";
+      uploadError.hidden = false;
+      sendBtn.disabled = true;
+      return;
+    }
+    fileName.textContent = file.name;
+    dropzone.classList.add("has-file");
+    sendBtn.disabled = false;
+  };
+
+  fileInput.addEventListener("change", () => pickFile(fileInput.files[0]));
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("dragging");
+  });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragging"));
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragging");
+    if (!e.dataTransfer.files.length) return;
+    fileInput.files = e.dataTransfer.files;
+    pickFile(fileInput.files[0]);
+  });
+
+  sendBtn.addEventListener("click", async () => {
+    sendBtn.disabled = true;
+    try {
+      await submitBrief(
+        { submittedAt: new Date().toISOString(), hasBrand: true, hasGuidelines: true },
+        fileInput.files[0]
+      );
+      openThanksModal();
+    } catch (err) {
+      console.error(err);
+      uploadError.textContent = "The upload didn't go through. Check your connection and try again.";
+      uploadError.hidden = false;
+      sendBtn.disabled = false;
+    }
+  });
+
+  // ── thank-you pop-up ───────────────────────────────────────
+  const modal = document.getElementById("thanks-modal");
+  const P = C.thanksPopup;
+  document.getElementById("modal-title").textContent = P.title;
+  document.getElementById("modal-text").textContent = P.text;
+  const modalBtn = document.getElementById("modal-btn");
+  modalBtn.textContent = P.button;
+
+  function openThanksModal() {
+    modal.hidden = false;
+    modalBtn.focus();
+  }
+
+  const closeThanksModal = () => {
+    modal.hidden = true;
+    startEl.hidden = true;
+    form.hidden = true;
+    document.getElementById("thanks-title").textContent = P.title;
+    document.getElementById("thanks-text").textContent = P.text;
+    document.getElementById("thanks").hidden = false;
+    window.scrollTo({ top: 0 });
+  };
+  modalBtn.addEventListener("click", closeThanksModal);
+  document.addEventListener("keydown", (e) => e.key === "Escape" && !modal.hidden && closeThanksModal());
+
   // ── collect answers ────────────────────────────────────────
   function collect() {
     const data = {};
@@ -228,15 +419,24 @@
       }
     });
     for (const [k, set] of Object.entries(selections)) data[k] = [...set];
+    for (const [k, rows] of Object.entries(brandLists)) {
+      data[k] = [...rows.children]
+        .map((r) => ({
+          link: r.querySelector('[data-role="link"]').value.trim(),
+          notes: r.querySelector('[data-role="notes"]').value.trim(),
+        }))
+        .filter((b) => b.link || b.notes);
+    }
     return data;
   }
 
   /*
-   * Where answers go. For now this only logs them in the browser console.
+   * Where answers (and an uploaded guidelines file) go.
+   * For now this only logs them in the browser console.
    * This is the single function the back-end step will replace.
    */
-  async function submitBrief(data) {
-    console.log("Brand brief:", data);
+  async function submitBrief(data, file) {
+    console.log("Brand brief:", data, file ? `(file: ${file.name})` : "");
     return true;
   }
 

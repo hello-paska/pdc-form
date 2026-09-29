@@ -19,7 +19,11 @@
   </header>
 
   <main class="container">
-    <form id="brand-form" novalidate>
+    <!-- Start screen: "Do you already have a brand?" (rendered from questions.js) -->
+    <section id="start" class="start"></section>
+
+    <form id="brand-form" novalidate hidden>
+      <button type="button" class="btn-back" id="back-btn">← Back</button>
       <!-- Intro and sections are rendered from questions.js -->
       <div id="form-root"></div>
 
@@ -34,6 +38,14 @@
       <p id="thanks-text"></p>
     </section>
   </main>
+
+  <div class="modal" id="thanks-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal-card">
+      <h2 class="display" id="modal-title"></h2>
+      <p id="modal-text"></p>
+      <button type="button" class="btn-primary btn-plain" id="modal-btn"></button>
+    </div>
+  </div>
 
   <footer class="site-footer">
     <div class="footer-inner">
