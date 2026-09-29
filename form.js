@@ -244,6 +244,7 @@
     e.preventDefault();
     const btn = document.getElementById("submit-btn");
     btn.disabled = true;
+    showError("");
     try {
       await submitBrief({ submittedAt: new Date().toISOString(), answers: collect() });
       form.hidden = true;
@@ -251,14 +252,34 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error(err);
-      alert("Something went wrong sending the brief. Please try again.");
+      showError("The brief didn't send. Check your connection and press Send again.");
     } finally {
       btn.disabled = false;
     }
   });
 
-  document.getElementById("clear-btn").addEventListener("click", () => {
-    if (!confirm("Clear all answers?")) return;
+  const errorBox = el("p", { class: "form-error", role: "alert", hidden: "" });
+  form.append(errorBox);
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.hidden = !msg;
+  }
+
+  // Two-step clear: first click asks, second click within 4s clears.
+  const clearBtn = document.getElementById("clear-btn");
+  let clearTimer = null;
+  clearBtn.addEventListener("click", () => {
+    if (!clearTimer) {
+      clearBtn.textContent = "Click again to clear everything";
+      clearTimer = setTimeout(() => {
+        clearBtn.textContent = C.submit.clear;
+        clearTimer = null;
+      }, 4000);
+      return;
+    }
+    clearTimeout(clearTimer);
+    clearTimer = null;
+    clearBtn.textContent = C.submit.clear;
     form.reset();
     for (const set of Object.values(selections)) set.clear();
     form.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
