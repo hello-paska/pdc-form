@@ -2,19 +2,21 @@
    Design tokens — swap these to match the brand
    ───────────────────────────────────────────── */
 :root {
-  --accent: #E4531F;          /* PDC orange */
-  --accent-soft: #FDEEE8;
-  --ink: #1A1A1A;
-  --ink-muted: #6B6B6B;
-  --ink-faint: #A3A3A3;
-  --line: #E7E5E2;
-  --track: #E2E0DC;
+  /* From pitchdeckcreators.com */
+  --accent: #F1511B;          /* primary orange */
+  --accent-dark: #C14116;     /* primary dark orange */
+  --accent-soft: #FEEEE8;
+  --ink: #000000;
+  --ink-muted: #726967;       /* neutral-500 */
+  --ink-faint: #A59D9B;       /* neutral-400 */
+  --line: #E9E8E8;            /* neutral-100 */
+  --track: #E9E8E8;
   --bg: #FFFFFF;
-  --footer-bg: #1F1B19;
-  --footer-ink: #BDB7B2;
+  --footer-bg: #1D1918;       /* neutral-900 */
+  --footer-ink: #BCB4B4;      /* neutral-300 */
 
-  --font-display: "Instrument Serif", "Times New Roman", serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-body: "Geist", Arial, sans-serif;
 
   --container: 920px;
   --label-col: 230px;
@@ -48,14 +50,10 @@ a { color: inherit; }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
   text-decoration: none;
-  letter-spacing: -0.01em;
 }
 
-.brand--light { color: #fff; }
+.brand img { display: block; height: 24px; width: auto; }
 
 .nav-link {
   font-size: 14px;
@@ -324,10 +322,10 @@ a { color: inherit; }
   border: 0;
   padding: 16px 28px;
   cursor: pointer;
-  transition: filter .15s;
+  transition: background .15s;
 }
 .btn-primary::after { content: "  ↗"; }
-.btn-primary:hover { filter: brightness(.92); }
+.btn-primary:hover { background: var(--accent-dark); }
 .btn-primary:disabled { opacity: .6; cursor: progress; }
 
 .btn-link {
