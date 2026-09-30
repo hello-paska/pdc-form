@@ -178,8 +178,8 @@ window.FORM_CONTENT = {
       hint: "Two lists. Brands you admire, and brands in your space you do not want to look like.",
       type: "grid",
       fields: [
-        { id: "admire", label: "Admire (any industry)", kind: "textarea", placeholder: "Names, links, screenshots you will send us" },
-        { id: "not_resemble", label: "Do not want to resemble", kind: "textarea", placeholder: "Competitors or looks that feel wrong" },
+        { id: "admire", label: "Admire (any industry)", kind: "textarea", placeholder: "Names or links, e.g. Linear: I like the font, but not the colour palette. It feels too dark." },
+        { id: "not_resemble", label: "Do not want to resemble", kind: "textarea", placeholder: "Names or links, e.g. Salesforce: it feels too corporate, and the bright blue and busy layouts look dated." },
       ],
     },
 
