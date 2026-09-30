@@ -77,8 +77,8 @@ window.FORM_CONTENT = {
     },
     // Shown when the client wants something new: sends them to the full form
     toForm: {
-      title: "No worries at all.",
-      text: "Plenty of great decks start from a blank page, and we'd be glad to design yours from scratch. To get it right, we just need a few minutes of your time. A handful of questions will help us understand your company, your goals and the look you have in mind.",
+      title: "Sure!",
+      text: "Plenty of great decks start from a blank page, and we'd be glad to design yours from scratch. To get it right, we just need a few minutes of your time. A handful of questions will help us understand your company and the look you have in mind.",
       button: "Let's get started",
     },
   },
