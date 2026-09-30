@@ -361,6 +361,7 @@ a { color: inherit; }
   padding: 40px 0 56px;
 }
 
+.start-title { font-size: clamp(44px, 6vw, 64px); }
 .start-title em { display: inline; }
 
 .choices {

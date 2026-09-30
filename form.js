@@ -250,92 +250,56 @@
   document.getElementById("footer-copy").textContent = C.footer.copyright;
   document.getElementById("footer-location").textContent = C.footer.location;
 
-  // ── start screen: "Do you already have a brand?" ──────────
+  // ── start screen (branching questions before the form) ────
   const S = C.start;
-  const G = S.guidelines;
   const startEl = document.getElementById("start");
+  const now = () => new Date().toISOString();
 
   const choice = (label) => el("button", { type: "button", class: "choice", "aria-pressed": "false", text: label });
-  const press = (on, off) => {
-    on.setAttribute("aria-pressed", "true");
-    off.setAttribute("aria-pressed", "false");
+
+  // A yes/no step. Picking an answer marks it and hides everything after it.
+  const question = (cfg, onYes, onNo, { big = false } = {}) => {
+    const yes = choice(cfg.yes);
+    const no = choice(cfg.no);
+    const title = big
+      ? el("div", { class: "intro-body" }, [
+          el("h1", { class: "display intro-title start-title", html: accent(cfg.title) }),
+          el("div", { class: "intro-side" }, [el("p", { text: cfg.description })]),
+        ])
+      : el("div", {}, [
+          el("h2", { class: "display section-title", html: accent(cfg.title) }),
+          cfg.hint ? el("p", { class: "hint", text: cfg.hint }) : null,
+        ]);
+    const node = el("div", { class: big ? "" : "step" }, [title, el("div", { class: "choices" }, [yes, no])]);
+    const pick = (on, off, next) => {
+      on.setAttribute("aria-pressed", "true");
+      off.setAttribute("aria-pressed", "false");
+      next();
+    };
+    yes.addEventListener("click", () => pick(yes, no, onYes));
+    no.addEventListener("click", () => pick(no, yes, onNo));
+    node._reset = () => [yes, no].forEach((b) => b.setAttribute("aria-pressed", "false"));
+    return node;
   };
 
-  const hasYes = choice(S.yes);
-  const hasNo = choice(S.no);
-  const gYes = choice(G.yes);
-  const gNo = choice(G.no);
-
-  const fileInput = el("input", { type: "file", id: "guidelines_file", accept: G.accept, class: "file-input" });
+  // Upload step (guidelines file)
+  const U = S.upload;
+  const fileInput = el("input", { type: "file", id: "guidelines_file", accept: U.accept, class: "file-input" });
   const fileName = el("span", { class: "file-name", text: "Click to choose a file, or drop it here" });
   const dropzone = el("label", { class: "dropzone", for: "guidelines_file" }, [
     fileInput,
     el("span", { class: "dropzone-icon", "aria-hidden": "true", text: "↑" }),
     fileName,
   ]);
-  const sendBtn = el("button", { type: "button", class: "btn-primary", text: G.sendButton, disabled: "" });
+  const uploadBtn = el("button", { type: "button", class: "btn-primary", text: U.sendButton, disabled: "" });
   const uploadError = el("p", { class: "form-error", role: "alert", hidden: "" });
-
   const uploadStep = el("div", { class: "step", hidden: "" }, [
-    el("span", { class: "field-label", text: G.uploadLabel }),
+    el("h2", { class: "display section-title", html: accent(U.title) }),
+    el("p", { class: "hint", text: U.hint }),
     dropzone,
-    el("p", { class: "upload-hint", text: G.uploadHint }),
     uploadError,
-    el("div", { class: "actions" }, [sendBtn]),
+    el("div", { class: "actions" }, [uploadBtn]),
   ]);
-
-  const guidelinesStep = el("div", { class: "step", hidden: "" }, [
-    el("h2", { class: "display section-title", html: accent(G.title) }),
-    el("p", { class: "hint", text: G.hint }),
-    el("div", { class: "choices" }, [gYes, gNo]),
-    uploadStep,
-  ]);
-
-  startEl.append(
-    meta("", S.label),
-    el("div", { class: "intro-body" }, [
-      el("h1", { class: "display intro-title start-title", html: accent(S.title) }),
-      el("div", { class: "intro-side" }, [el("p", { text: S.description })]),
-    ]),
-    el("div", { class: "choices" }, [hasYes, hasNo]),
-    guidelinesStep
-  );
-
-  const reveal = (node) => {
-    node.hidden = false;
-    node.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  hasYes.addEventListener("click", () => {
-    press(hasYes, hasNo);
-    reveal(guidelinesStep);
-  });
-
-  hasNo.addEventListener("click", () => {
-    press(hasNo, hasYes);
-    startEl.hidden = true;
-    form.hidden = false;
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-
-  document.getElementById("back-btn").addEventListener("click", () => {
-    form.hidden = true;
-    startEl.hidden = false;
-    hasNo.setAttribute("aria-pressed", "false");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-
-  gYes.addEventListener("click", () => {
-    press(gYes, gNo);
-    reveal(uploadStep);
-  });
-
-  gNo.addEventListener("click", async () => {
-    press(gNo, gYes);
-    uploadStep.hidden = true;
-    await submitBrief({ submittedAt: new Date().toISOString(), hasBrand: true, hasGuidelines: false });
-    openThanksModal();
-  });
 
   const MAX_BYTES = 50 * 1024 * 1024;
   const pickFile = (file) => {
@@ -344,14 +308,13 @@
     if (file.size > MAX_BYTES) {
       uploadError.textContent = "That file is over 50 MB. Please upload a smaller file or a ZIP.";
       uploadError.hidden = false;
-      sendBtn.disabled = true;
+      uploadBtn.disabled = true;
       return;
     }
     fileName.textContent = file.name;
     dropzone.classList.add("has-file");
-    sendBtn.disabled = false;
+    uploadBtn.disabled = false;
   };
-
   fileInput.addEventListener("change", () => pickFile(fileInput.files[0]));
   dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -365,38 +328,139 @@
     fileInput.files = e.dataTransfer.files;
     pickFile(fileInput.files[0]);
   });
-
-  sendBtn.addEventListener("click", async () => {
-    sendBtn.disabled = true;
+  uploadBtn.addEventListener("click", async () => {
+    uploadBtn.disabled = true;
     try {
-      await submitBrief(
-        { submittedAt: new Date().toISOString(), hasBrand: true, hasGuidelines: true },
-        fileInput.files[0]
-      );
-      openThanksModal();
+      await submitBrief({ submittedAt: now(), path: "follow-guidelines" }, fileInput.files[0]);
+      openPopup("confirmation");
     } catch (err) {
       console.error(err);
       uploadError.textContent = "The upload didn't go through. Check your connection and try again.";
       uploadError.hidden = false;
-      sendBtn.disabled = false;
+      uploadBtn.disabled = false;
     }
   });
 
-  // ── thank-you pop-up ───────────────────────────────────────
-  const modal = document.getElementById("thanks-modal");
-  const P = C.thanksPopup;
-  document.getElementById("modal-title").textContent = P.title;
-  document.getElementById("modal-text").textContent = P.text;
-  const modalBtn = document.getElementById("modal-btn");
-  modalBtn.textContent = P.button;
+  // Sources step (links to where the brand lives)
+  const R = S.sources;
+  const linkRows = el("div", { class: "brand-rows" });
+  const sourcesBtn = el("button", { type: "button", class: "btn-primary", text: R.sendButton, disabled: "" });
+  const sourcesError = el("p", { class: "form-error", role: "alert", hidden: "" });
+  const links = () => [...linkRows.querySelectorAll("input")].map((i) => i.value.trim()).filter(Boolean);
+  const addLink = () => {
+    const n = linkRows.children.length + 1;
+    const input = el("input", {
+      class: "input",
+      type: "url",
+      id: `source_link_${n}`,
+      placeholder: R.placeholder,
+      "aria-label": `Link ${n}`,
+      autocomplete: "off",
+    });
+    input.addEventListener("input", () => (sourcesBtn.disabled = !links().length));
+    linkRows.append(input);
+    return input;
+  };
+  addLink();
+  const addLinkBtn = el("button", { type: "button", class: "btn-add", text: `+ ${R.addButton}` });
+  addLinkBtn.addEventListener("click", () => addLink().focus());
+  const sourcesStep = el("div", { class: "step", hidden: "" }, [
+    el("h2", { class: "display section-title", html: accent(R.title) }),
+    el("p", { class: "hint", text: R.hint }),
+    linkRows,
+    addLinkBtn,
+    sourcesError,
+    el("div", { class: "actions" }, [sourcesBtn]),
+  ]);
+  sourcesBtn.addEventListener("click", async () => {
+    sourcesBtn.disabled = true;
+    try {
+      await submitBrief({ submittedAt: now(), path: "follow-touchpoints", links: links() });
+      openPopup("confirmation");
+    } catch (err) {
+      console.error(err);
+      sourcesError.textContent = "The links didn't send. Check your connection and try again.";
+      sourcesError.hidden = false;
+      sourcesBtn.disabled = false;
+    }
+  });
 
-  function openThanksModal() {
+  // Wire the tree together
+  const hide = (...nodes) =>
+    nodes.forEach((n) => {
+      n.hidden = true;
+      n._reset && n._reset();
+    });
+  const reveal = (node) => {
+    node.hidden = false;
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const followQ = question(
+    S.follow,
+    () => reveal(uploadStep),
+    () => {
+      hide(uploadStep);
+      openPopup("toForm");
+    }
+  );
+  const touchQ = question(
+    S.touchpoints,
+    () => reveal(sourcesStep),
+    () => {
+      hide(sourcesStep);
+      openPopup("toForm");
+    }
+  );
+  followQ.hidden = true;
+  touchQ.hidden = true;
+
+  const firstQ = question(
+    S,
+    () => {
+      hide(touchQ, sourcesStep);
+      reveal(followQ);
+    },
+    () => {
+      hide(followQ, uploadStep);
+      reveal(touchQ);
+    },
+    { big: true }
+  );
+
+  startEl.append(meta("", S.label), firstQ, followQ, uploadStep, touchQ, sourcesStep);
+
+  const openForm = () => {
+    startEl.hidden = true;
+    form.hidden = false;
+    window.scrollTo({ top: 0 });
+  };
+
+  document.getElementById("back-btn").addEventListener("click", () => {
+    form.hidden = true;
+    startEl.hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // ── pop-ups ────────────────────────────────────────────────
+  const modal = document.getElementById("thanks-modal");
+  const modalTitle = document.getElementById("modal-title");
+  const modalText = document.getElementById("modal-text");
+  const modalBtn = document.getElementById("modal-btn");
+  let currentPopup = null;
+
+  function openPopup(kind) {
+    const P = C.popups[kind];
+    currentPopup = kind;
+    modalTitle.textContent = P.title;
+    modalText.textContent = P.text;
+    modalBtn.textContent = P.button;
     modal.hidden = false;
     modalBtn.focus();
   }
 
-  const closeThanksModal = () => {
-    modal.hidden = true;
+  const finish = () => {
+    const P = C.popups.confirmation;
     startEl.hidden = true;
     form.hidden = true;
     document.getElementById("thanks-title").textContent = P.title;
@@ -404,8 +468,16 @@
     document.getElementById("thanks").hidden = false;
     window.scrollTo({ top: 0 });
   };
-  modalBtn.addEventListener("click", closeThanksModal);
-  document.addEventListener("keydown", (e) => e.key === "Escape" && !modal.hidden && closeThanksModal());
+
+  modalBtn.addEventListener("click", () => {
+    modal.hidden = true;
+    currentPopup === "toForm" ? openForm() : finish();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || modal.hidden) return;
+    modal.hidden = true;
+    if (currentPopup === "confirmation") finish();
+  });
 
   // ── collect answers ────────────────────────────────────────
   function collect() {

@@ -3,9 +3,14 @@
  *  BRAND INTAKE FORM — CONTENT
  *  Edit everything the client reads here. No HTML needed.
  *
- *  The page opens with `start`: "Do you already have a brand?"
- *    Yes → asks about brand guidelines (upload, or no), then shows `thanksPopup`.
- *    No  → shows `intro` and the full list of `sections` below.
+ *  The page opens with `start`: "Do you already have a brand with brand guidelines?"
+ *    Yes → "Follow your guidelines?"
+ *            Yes → upload guidelines → `popups.confirmation`
+ *            No  → `popups.toForm` → full form
+ *    No  → "Website, social media or other touchpoint to follow?"
+ *            Yes → links to where the brand lives → `popups.confirmation`
+ *            No  → `popups.toForm` → full form
+ *  The full form is `intro` plus the list of `sections` below.
  *
  *  Section types:
  *    "text"      – single-line answer
@@ -28,28 +33,55 @@
 window.FORM_CONTENT = {
   start: {
     label: "Brand intake",
-    title: "Do you already have a *brand*?",
+    title: "Do you already have a brand with *brand guidelines*?",
     description:
-      "If you already have a brand identity, we'll apply your existing visual style to your pitch deck.",
-    yes: "Yes, I have a brand",
-    no: "No, not yet",
+      "A few quick questions help us understand what we're working with before we design your pitch deck.",
+    yes: "Yes",
+    no: "No",
 
-    guidelines: {
-      title: "Do you have brand guidelines?",
-      hint: "A PDF or file that shows your logo, colours, fonts and how to use them.",
+    // Path "Yes": has brand guidelines
+    follow: {
+      title: "Do you want us to follow your brand guidelines for the visual design?",
+      hint: "We'll design your deck in your existing visual style.",
       yes: "Yes",
       no: "No",
-      uploadLabel: "Upload your brand guidelines",
-      uploadHint: "PDF, images, ZIP, Figma, Keynote or PowerPoint. Up to 50 MB.",
+    },
+    upload: {
+      title: "Please upload your brand guidelines.",
+      hint: "PDF, images, ZIP, Figma, Keynote or PowerPoint. Up to 50 MB.",
       accept: ".pdf,.png,.jpg,.jpeg,.svg,.zip,.fig,.ai,.key,.ppt,.pptx",
       sendButton: "Send guidelines",
     },
+
+    // Path "No": no brand guidelines
+    touchpoints: {
+      title: "Do you have a website, social media or another brand touchpoint we should follow when designing your deck?",
+      hint: "Anywhere your brand already shows up, so we can match its look.",
+      yes: "Yes",
+      no: "No, I need something new",
+    },
+    sources: {
+      title: "Where does your brand live?",
+      hint: "Share links to your website, social media or anything else that shows your current look.",
+      placeholder: "e.g. yourcompany.com or instagram.com/yourcompany",
+      addButton: "Add another link",
+      sendButton: "Send links",
+    },
   },
 
-  thanksPopup: {
-    title: "Thanks a lot!",
-    text: "We'll get back to you with three design proposals based on your existing visual style.",
-    button: "Done",
+  popups: {
+    // Shown after guidelines are uploaded or links are sent (end of the process)
+    confirmation: {
+      title: "Thanks a lot!",
+      text: "We'll get back to you with three design proposals based on your existing visual style.",
+      button: "Done",
+    },
+    // Shown when the client wants something new: sends them to the full form
+    toForm: {
+      title: "One more step",
+      text: "Please fill in our form so we can better understand which visual direction to take.",
+      button: "Go to the form",
+    },
   },
 
   intro: {
