@@ -473,18 +473,11 @@ a { color: inherit; }
 }
 .btn-add:hover { text-decoration: underline; }
 
-/* ── Brand lists (inspiration) ──────────────── */
+/* ── Link lists ─────────────────────────────── */
 .brand-rows {
   display: grid;
   gap: 16px;
 }
-
-.brand-row {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  gap: 8px;
-}
-.brand-row .textarea { min-height: 54px; }
 
 /* ── Thank-you pop-up ───────────────────────── */
 .modal {
@@ -547,6 +540,5 @@ a { color: inherit; }
   .dial-head { grid-template-columns: 1fr 1fr; }
   .dial-value { display: none; }
   .choice { flex: 1 1 100%; }
-  .brand-row { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; }
 }

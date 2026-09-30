@@ -14,13 +14,11 @@
  *
  *  Section types:
  *    "text"      – single-line answer
- *    "textarea"  – multi-line answer
+ *    "textarea"  – multi-line answer (optional `fieldLabel` above the box)
  *    "chips"     – pick words from a list (+ optional custom word)
  *    "sliders"   – dials between two opposites (1–10)
  *    "grid"      – several labelled fields side by side
  *                  (each field: kind "input" or "textarea")
- *    "brands"    – lists of brand links, each with a note on what
- *                  the client likes or dislikes about it
  *
  *  Every answer is saved under its `id`, so keep ids unique and
  *  avoid renaming them once clients have started answering.
@@ -177,23 +175,11 @@ window.FORM_CONTENT = {
       number: "6.0",
       label: "Inspiration",
       title: "Any inspiration?",
-      hint: "Share links to brands or decks and tell us exactly what you like or dislike about each one. The more specific, the better.",
-      type: "brands",
-      lists: [
-        {
-          id: "brands_admire",
-          label: "Brands you admire",
-          linkPlaceholder: "Link to the brand, e.g. stripe.com",
-          notesPlaceholder: "What do you like or dislike? e.g. I like the blue, but not the font.",
-          addButton: "Add another brand",
-        },
-        {
-          id: "brands_avoid",
-          label: "Brands you don't want to look like",
-          linkPlaceholder: "Link to the brand",
-          notesPlaceholder: "What exactly don't you like? e.g. Too corporate, the colours feel cold.",
-          addButton: "Add another brand",
-        },
+      hint: "Two lists. Brands you admire, and brands in your space you do not want to look like.",
+      type: "grid",
+      fields: [
+        { id: "admire", label: "Admire (any industry)", kind: "textarea", placeholder: "Names, links, screenshots you will send us" },
+        { id: "not_resemble", label: "Do not want to resemble", kind: "textarea", placeholder: "Competitors or looks that feel wrong" },
       ],
     },
 
@@ -204,6 +190,7 @@ window.FORM_CONTENT = {
       hint: "For example a colour, font, logo or visuals.",
       type: "textarea",
       id: "must_keep",
+      fieldLabel: "Must-keep constraints",
       placeholder: "e.g. We need to keep our logo and the dark green colour.",
     },
   ],

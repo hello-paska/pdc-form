@@ -37,9 +37,8 @@
   const labelled = (f, control) =>
     el("div", {}, [el("label", { class: "field-label", for: f.id, text: f.label }), control]);
 
-  // ── state for non-native inputs ────────────────────────────
-  const selections = {}; // chips: id -> Set
-  const brandLists = {}; // brand lists: id -> rows container
+  // ── state for non-native inputs (chips) ────────────────────
+  const selections = {}; // id -> Set
 
   // ── section renderers ──────────────────────────────────────
   const renderers = {
@@ -158,57 +157,8 @@
     },
 
     textarea(s) {
-      return fieldControl({ id: s.id, placeholder: s.placeholder, kind: "textarea" });
-    },
-
-    brands(s) {
-      return el(
-        "div",
-        { class: "stack" },
-        s.lists.map((list) => {
-          const rows = el("div", { class: "brand-rows" });
-          let count = 0;
-          const addRow = () => {
-            count += 1;
-            const linkId = `${list.id}_${count}_link`;
-            rows.append(
-              el("div", { class: "brand-row" }, [
-                el("input", {
-                  class: "input",
-                  type: "url",
-                  id: linkId,
-                  placeholder: list.linkPlaceholder,
-                  "aria-label": `${list.label}: link ${count}`,
-                  autocomplete: "off",
-                  "data-role": "link",
-                }),
-                el("textarea", {
-                  class: "textarea",
-                  id: `${list.id}_${count}_notes`,
-                  placeholder: list.notesPlaceholder,
-                  "aria-label": `${list.label}: what you like or dislike ${count}`,
-                  "data-role": "notes",
-                }),
-              ])
-            );
-          };
-          addRow();
-          brandLists[list.id] = rows;
-
-          const add = el("button", { type: "button", class: "btn-add", text: `+ ${list.addButton}` });
-          add.addEventListener("click", () => {
-            addRow();
-            rows.lastElementChild.querySelector("input").focus();
-          });
-
-          const wrap = el("div", {}, [el("span", { class: "field-label", text: list.label }), rows, add]);
-          wrap._reset = () => {
-            while (rows.children.length > 1) rows.lastElementChild.remove();
-            count = 1;
-          };
-          return wrap;
-        })
-      );
+      const f = { id: s.id, placeholder: s.placeholder, kind: "textarea", label: s.fieldLabel };
+      return f.label ? labelled(f, fieldControl(f)) : fieldControl(f);
     },
   };
 
@@ -491,14 +441,6 @@
       }
     });
     for (const [k, set] of Object.entries(selections)) data[k] = [...set];
-    for (const [k, rows] of Object.entries(brandLists)) {
-      data[k] = [...rows.children]
-        .map((r) => ({
-          link: r.querySelector('[data-role="link"]').value.trim(),
-          notes: r.querySelector('[data-role="notes"]').value.trim(),
-        }))
-        .filter((b) => b.link || b.notes);
-    }
     return data;
   }
 
