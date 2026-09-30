@@ -32,7 +32,6 @@
 
 window.FORM_CONTENT = {
   start: {
-    label: "Brand intake",
     title: "Do you already have a brand with *brand guidelines*?",
     description:
       "A few quick questions help us understand what we're working with before we design your pitch deck.",
@@ -78,9 +77,9 @@ window.FORM_CONTENT = {
     },
     // Shown when the client wants something new: sends them to the full form
     toForm: {
-      title: "One more step",
-      text: "Please fill in our form so we can better understand which visual direction to take.",
-      button: "Go to the form",
+      title: "No worries at all.",
+      text: "Plenty of great decks start from a blank page, and we'd be glad to design yours from scratch. To get it right, we just need a few minutes of your time. A handful of questions will help us understand your company, your goals and the look you have in mind.",
+      button: "Let's get started",
     },
   },
 

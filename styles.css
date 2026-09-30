@@ -317,8 +317,8 @@ a { color: inherit; }
 
 .btn-primary {
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 400;
   color: #fff;
   background: var(--accent);
   border: 0;
@@ -357,8 +357,7 @@ a { color: inherit; }
 
 /* ── Start screen ───────────────────────────── */
 .start {
-  border-top: 1px solid var(--line);
-  padding: 40px 0 56px;
+  padding: 24px 0 56px;
 }
 
 .start-title { font-size: clamp(44px, 6vw, 64px); }

@@ -428,7 +428,7 @@
     { big: true }
   );
 
-  startEl.append(meta("", S.label), firstQ, followQ, uploadStep, touchQ, sourcesStep);
+  startEl.append(firstQ, followQ, uploadStep, touchQ, sourcesStep);
 
   const openForm = () => {
     startEl.hidden = true;
